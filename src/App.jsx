@@ -19,7 +19,7 @@ import { getUserLocation, getDistance } from "./func/getUserLocation";
 import Logo from "./assets/logo.webp";
 import Location from "./assets/location.webp";
 import { socialMedia, stores, TitleStore } from "./func/stores";
-
+import { LoadingScreen } from "./components/LoadingScreen";
 function App() {
   const { message } = AntdApp.useApp();
   const { Text, Title } = Typography;
@@ -27,22 +27,53 @@ function App() {
   const [city, setCity] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortedStores, setSortedStores] = useState(stores);
+  const [isLoading, setIsLoading] = useState(true);
 
+  const [tabByStore, setTabByStore] = useState({});
+  const getTabs = (store) => {
+    const tabs = [];
+
+    if (store.hasPizza) {
+      tabs.push({ key: "pizzaria", tab: "🍕 Pizza" });
+    }
+
+    if (store.hasLunch) {
+      tabs.push({ key: "almoco", tab: "🍽️ Almoço" });
+    }
+
+    return tabs.length > 1 ? tabs : false;
+  };
+  const handleTabChange = (storeName, key) => {
+    setTabByStore((prev) => ({
+      ...prev,
+      [storeName]: key,
+    }));
+  };
   const handleGetCity = async () => {
     try {
       const getCity = await getUserLocation();
 
       if (!getCity?.data) {
         return message.warning(
-          "Localização não disponível 😥, mas mostramos primeiro nossas novidades!"
+          "Localização não disponível 😥, mas mostramos primeiro nossas novidades!",
         );
       }
 
       const { latitude, longitude } = getCity.data;
 
       const ordered = [...stores].sort((a, b) => {
-        const distA = getDistance(latitude, longitude, a.coords.lat, a.coords.lon);
-        const distB = getDistance(latitude, longitude, b.coords.lat, b.coords.lon);
+        const distA = getDistance(
+          latitude,
+          longitude,
+          a.coords.lat,
+          a.coords.lon,
+        );
+        const distB = getDistance(
+          latitude,
+          longitude,
+          b.coords.lat,
+          b.coords.lon,
+        );
         return distA - distB;
       });
 
@@ -55,13 +86,13 @@ function App() {
       }
     } catch {
       const orderedByNew = [...stores].sort((a, b) =>
-        a.novidade === b.novidade ? 0 : a.novidade ? -1 : 1
+        a.novidade === b.novidade ? 0 : a.novidade ? -1 : 1,
       );
 
       setSortedStores(orderedByNew);
 
       message.info(
-        "Você recusou a localização 😥, mas mostramos primeiro nossas novidades!"
+        "Você recusou a localização 😥, mas mostramos primeiro nossas novidades!",
       );
     }
   };
@@ -72,14 +103,17 @@ function App() {
 
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
       );
 
       if (!response.ok) return;
 
       const data = await response.json();
-      const city = data.address.city || data.address.town || data.address.village;
-      const uf = data.address["ISO3166-2-lvl4"]?.replace("BR-", "") || data.address.state;
+      const city =
+        data.address.city || data.address.town || data.address.village;
+      const uf =
+        data.address["ISO3166-2-lvl4"]?.replace("BR-", "") ||
+        data.address.state;
 
       return city && uf ? `${city} - ${uf}` : city || "Cidade não encontrada";
     } catch {
@@ -98,18 +132,35 @@ function App() {
     const img = new Image();
     img.src = "assets/bg.webp";
     img.onload = () => {
-      document.querySelector(".bgCover").style.backgroundImage = "url('assets/bg.webp')";
+      document.querySelector(".bgCover").style.backgroundImage =
+        "url('assets/bg.webp')";
     };
   }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="container">
-      <Modal open={isModalOpen} onCancel={() => setIsModalOpen(false)} footer={null} centered>
+      <Modal
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+        centered
+      >
         <Flex vertical gap={10} align="center" style={{ textAlign: "center" }}>
           <img src={Logo} alt="Logo" style={{ height: 150 }} />
           <Title level={4}>Bem-vindo à {TitleStore} 🍕</Title>
           <Text strong>
-            Queremos te mostrar a {TitleStore} mais próxima. Para isso, precisamos da sua autorização de localização.
+            Queremos te mostrar a {TitleStore} mais próxima. Para isso,
+            precisamos da sua autorização de localização.
           </Text>
           <img src={Location} alt="localização" style={{ borderRadius: 10 }} />
           <Button
@@ -132,6 +183,8 @@ function App() {
 
       <div className="main2">
         {sortedStores.map((store, index) => {
+          const activeTab = tabByStore[store.name] || "pizzaria";
+          const link = store.menus?.[activeTab] || store.menus?.pizzaria;
           const cardContent = (
             <Card
               key={index}
@@ -140,24 +193,48 @@ function App() {
                 body: { padding: "30px 10px" },
                 title: { fontSize: 20, fontWeight: "bold" },
               }}
-              title={<><BsShop color={store.colorPrimary} /> {store.name}</>}
+              tabList={getTabs(store)}
+              activeTabKey={activeTab}
+              onTabChange={(key) => handleTabChange(store.name, key)}
+              title={
+                <>
+                  <BsShop color={store.colorPrimary} /> {store.name}
+                </>
+              }
               className="card"
             >
               <Card.Meta
                 description={
                   <div className="descriCard">
                     {store.address ? (
-                      <a href={store.maps} style={{ textDecoration: "none", color: "#929292" }} className="local">
-                        <FiMapPin color={store.colorPrimary} className="endereco" />
+                      <a
+                        href={store.maps}
+                        style={{ textDecoration: "none", color: "#929292" }}
+                        className="local"
+                      >
+                        <FiMapPin
+                          color={store.colorPrimary}
+                          className="endereco"
+                        />
                         {store.address}
                       </a>
                     ) : (
                       <Text style={{ color: "#929292" }} strong>
-                        Estamos no delivery, clique abaixo para conferir nosso cardápio!
+                        Estamos no delivery, clique abaixo para conferir nosso
+                        cardápio!
                       </Text>
                     )}
-                    <Button href={store.link} className="link" icon={<MdDeliveryDining size={20} />} type="primary">
-                      <Text strong style={{ color: "#fff" }}>Pedir agora</Text>
+                    <Button
+                      href={link}
+                      className="link"
+                      icon={<MdDeliveryDining size={20} />}
+                      type="primary"
+                    >
+                      <Text strong style={{ color: "#fff" }}>
+                        {activeTab === "almoco"
+                          ? "Pedir Almoço"
+                          : "Pedir Uma Pizza"}
+                      </Text>
                     </Button>
                   </div>
                 }
@@ -175,24 +252,41 @@ function App() {
         })}
 
         <Flex gap={10}>
-          <Avatar
-            icon={<AiFillInstagram color="#fff" />}
-            size="large"
-            style={{ background: sortedStores[0].colorPrimary, cursor: "pointer" }}
-            onClick={() => window.open(socialMedia.instagram, "_blank")}
-          />
-          <Avatar
-            icon={<FaTiktok color="#fff" />}
-            size="large"
-            style={{ background: sortedStores[0].colorPrimary, cursor: "pointer" }}
-            onClick={() => window.open(socialMedia.tiktok, "_blank")}
-          />
-          <Avatar
-            icon={<AiFillFacebook color="#fff" />}
-            size="large"
-            style={{ background: sortedStores[0].colorPrimary, cursor: "pointer" }}
-            onClick={() => window.open(socialMedia.facebook, "_blank")}
-          />
+          {socialMedia.instagram && (
+            <Avatar
+              icon={<AiFillInstagram color="#fff" />}
+              size="large"
+              style={{
+                background: sortedStores[0].colorPrimary,
+                cursor: "pointer",
+              }}
+              onClick={() => window.open(socialMedia.instagram, "_blank")}
+            />
+          )}
+
+          {socialMedia.tiktok && (
+            <Avatar
+              icon={<FaTiktok color="#fff" />}
+              size="large"
+              style={{
+                background: sortedStores[0].colorPrimary,
+                cursor: "pointer",
+              }}
+              onClick={() => window.open(socialMedia.tiktok, "_blank")}
+            />
+          )}
+
+          {socialMedia.facebook && (
+            <Avatar
+              icon={<AiFillFacebook color="#fff" />}
+              size="large"
+              style={{
+                background: sortedStores[0].colorPrimary,
+                cursor: "pointer",
+              }}
+              onClick={() => window.open(socialMedia.facebook, "_blank")}
+            />
+          )}
         </Flex>
       </div>
     </div>
