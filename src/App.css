@@ -175,7 +175,7 @@ header>img {
 
 .card {
   width: 100%;
-  max-width: 470px;
+  width: 470px;
 
   transition:
     transform 0.3s ease,
@@ -399,6 +399,7 @@ header>img {
   .main2,
   .main3 {
     width: 100%;
+    padding: 10px;
   }
 
   .card {

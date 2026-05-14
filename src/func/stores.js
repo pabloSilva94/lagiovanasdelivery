@@ -1,6 +1,6 @@
 export const stores = [
   {
-    name: "Delivery Canoas",
+    name: "Canoas",
     coords: { lat: -29.9146, lon: -51.1836 },
     address: null,
     novidade: true,
@@ -13,7 +13,7 @@ export const stores = [
     },
   },
   {
-    name: "Delivery Sapucaia / Esteio",
+    name: "Sapucaia / Esteio",
     coords: { lat: -29.8276, lon: -51.1464 },
     address: null,
     novidade: false,
