@@ -8,7 +8,7 @@ export const stores = [
     hasLunch: false,
     hasPizza: true,
     menus: {
-      pizzaria: "https://lagiovanaspizzaria.com.br/canoas",
+      pizzaria: "https://lagiovanaspizzaria.com.br/canoas/",
       almoco: null,
     },
   },
@@ -21,8 +21,8 @@ export const stores = [
     hasLunch: true,
     hasPizza: true,
     menus: {
-      pizzaria: "https://lagiovanaspizzaria.com.br/sapucaia",
-      almoco: "https://lagiovanaspizzaria.com.br/sapucaia-almoco",
+      pizzaria: "https://lagiovanaspizzaria.com.br/sapucaia/",
+      almoco: "https://lagiovanaspizzaria.com.br/sapucaia-almoco/",
     },
   },
 ];
