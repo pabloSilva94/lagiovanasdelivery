@@ -43,6 +43,18 @@ function App() {
 
     return tabs.length > 1 ? tabs : false;
   };
+  const getDefaultTab = (store) => {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const lunchStart = 9 * 60; // 9:00 AM
+    const lunchEnd = 14 * 60 + 30; // 2:00 PM
+    const isLunchTime =
+      currentMinutes >= lunchStart && currentMinutes <= lunchEnd;
+    if (isLunchTime && store.hasLunch) {
+      return "almoco";
+    }
+    return "pizzaria";
+  };
   const handleTabChange = (storeName, key) => {
     setTabByStore((prev) => ({
       ...prev,
@@ -183,7 +195,7 @@ function App() {
 
       <div className="main2">
         {sortedStores.map((store, index) => {
-          const activeTab = tabByStore[store.name] || "pizzaria";
+          const activeTab = tabByStore[store.name] || getDefaultTab(store);
           const link = store.menus?.[activeTab] || store.menus?.pizzaria;
           const cardContent = (
             <Card

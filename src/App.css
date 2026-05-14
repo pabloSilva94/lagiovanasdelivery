@@ -395,6 +395,10 @@ header>img {
     max-width: 220px;
   }
 
+  .bgCover {
+    background-position: 10% center;
+  }
+
   .main1,
   .main2,
   .main3 {
